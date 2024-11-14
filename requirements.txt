@@ -2,3 +2,6 @@ jittor
 pyyaml
 trimesh
 plyfile
+scipy
+tensorboardX
+scikit-learn

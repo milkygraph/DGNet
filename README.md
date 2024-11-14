@@ -6,8 +6,16 @@ The paper is in [Here](https://ieeexplore.ieee.org/abstract/document/10070611/).
 
 
 ## Installation
+### GCC
+Make sure you have the gcc and g++ version 12 and it is the default.
+
+### Python Environment
 ```
-pip install -r requirements.txt
+python3 -m venv .venv
+```
+
+```
+./.venv/bin/pip3 install -r requirements.txt
 ```
 
 ## Scannet
