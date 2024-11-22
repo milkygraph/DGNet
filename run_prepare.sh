@@ -1,2 +1,2 @@
-PYTHONPATH=./:$PATHONPATH python3 process_scannet.py
+PYTHONPATH=./:$PYTHONPATH python3 process_scannet.py
 
