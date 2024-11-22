@@ -106,7 +106,12 @@ def voxelize_mesh(vertex, face, voxel_size):
     
     id_unique, idx, counts = np.unique(ids_1D,return_counts=True,return_inverse=True)
 
-    vertex = jt.array(vertex)
+    # create a new vertex jt.array with the same shape as vertex
+    ran_arr = np.zeros(vertex.shape)
+    vertex_arr = jt.array(ran_arr)
+    ran_arr = np.array(vertex[0])
+
+    vertex = jt.array(vertex) # if you get an error here just make the process = 1
     imap = jt.array(idx)
     N,M = vertex.shape
     New_N = len(id_unique)

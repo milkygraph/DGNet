@@ -204,11 +204,11 @@ def voxelize_mesh_wrapper(args):
 
 
 def preprocess_voxel():
-    processes = 64
+    processes = 1
     voxel_size = 2
     face_num = 100000
 
-    data_dir = "datasets/custom"
+    data_dir = "datasets/"
 
     assert os.path.exists(data_dir), "The data dir must exist."
     save_dir = f"datasets/custom/custom_{voxel_size}_split{face_num}"
