@@ -18,6 +18,13 @@ python3 -m venv .venv
 ./.venv/bin/pip3 install -r requirements.txt
 ```
 
+## Obj Processing
+Put your obj files into the "dataset/custom" folder.
+
+```
+python3 process_obj.py
+```
+
 ## Scannet
 Download the scannet and prepare it.
 
