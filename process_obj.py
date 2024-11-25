@@ -1,9 +1,7 @@
 import os
 import glob
 import os.path as osp
-from plyfile import PlyData
 import numpy as np
-from plyfile import PlyData, PlyElement
 from tqdm import tqdm
 import trimesh
 import jittor as jt
@@ -11,6 +9,9 @@ from jmesh.config.constant import SCANNET_CLASS_REMAP
 from jmesh.utils.general import multi_process
 from jmesh.utils.data_utils import vertex2face_labels, vertex2vertex_map, voxelize_mesh
 from jmesh.layers.face_pool import build_mesh_level
+
+# Top-level dictionary for label mapping
+LABEL_DICT = {}
 
 
 def crop_mesh(
@@ -123,13 +124,62 @@ def read_scannet_ply(mesh_file, with_mapping=True):
     return vertex_data, faces, with_labels
 
 
+def read_custom_obj(mesh_file, with_mapping=True):
+    vertices = []
+    faces = []
+    face_labels = []
+    vertex_labels = []
+
+    current_label = 0
+
+    with open(mesh_file, "r") as file:
+        for line in file:
+            if line.startswith("v "):  # Vertex line
+                parts = line.split()
+                vertices.append([float(parts[1]), float(parts[2]), float(parts[3])])
+                vertex_labels.append(0)  # will overwrite with correct labels later
+            elif line.startswith("f "):  # Face line
+                parts = line.split()
+                # Convert face indices to zero-based indexing
+                faces.append([int(idx.split("/")[0]) - 1 for idx in parts[1:]])
+                face_labels.append(current_label)
+            elif line.startswith("g "):  # Group line
+                group_name = line.split()[1]
+                if group_name != "off":
+                    current_label = LABEL_DICT.get(group_name, 0)
+                    if current_label == 0:
+                        LABEL_DICT[group_name] = len(LABEL_DICT) + 1
+                        current_label = LABEL_DICT[group_name]
+                        print(f"New label: {group_name} -> {LABEL_DICT[group_name]}")
+
+    vertices = np.array(vertices, dtype=np.float32)
+    faces = np.array(faces, dtype=np.int32)
+
+    for face, label in zip(faces, face_labels):
+        for vertex_idx in face:
+            vertex_labels[vertex_idx] = label
+
+    if vertex_labels:
+        vertex_labels = np.array(vertex_labels, dtype=np.int32)
+        print("Vertex labels: ", vertex_labels.shape)
+        print("Faces: ", faces.shape)
+
+        vertices = np.concatenate([vertices, vertex_labels[:, None]], axis=1)
+        with_labels = True
+    else:
+        with_labels = False
+
+    return vertices, faces, with_labels
+
+
 def voxelize_mesh_wrapper(args):
     read_func, mesh_file, save_dir, name, voxel_size, face_num = args
     vertex_data, faces, with_labels = read_func(mesh_file)
 
+    vertex_labels = None
     if with_labels:
         vertex_labels = vertex_data[:, -1].astype(np.int32)
-        vertex_data = vertex_data[:, :6]
+        vertex_data = vertex_data[:, :3]
 
     orig_vertices = vertex_data[:, :3]
     vertex_data, faces, idx = voxelize_mesh(vertex_data, faces, voxel_size)
@@ -137,7 +187,7 @@ def voxelize_mesh_wrapper(args):
     root_save_dir = "/".join(save_dir.split("/")[:-1])
     task = save_dir.split("/")[-1]
     jt.save(
-        (idx, vertex_data[:, :3], faces, vertex_labels if with_labels else None),
+        (idx, vertex_data[:, :3], faces, vertex_labels),
         os.path.join(root_save_dir, "raw_map", task, name + ".pkl"),
     )
 
@@ -156,32 +206,36 @@ def preprocess_voxel():
     voxel_size = 2
     face_num = 100000
 
-    data_dir = "scans_test/"
+    data_dir = "datasets"
 
     assert os.path.exists(data_dir), "The data dir must exist."
-    save_dir = f"datasets/scannet/scannet_voxel_{voxel_size}_split{face_num}"
-    # if osp.exists(save_dir):
-    #     shutil.rmtree(save_dir)
+    save_dir = f"{data_dir}/custom_{voxel_size}_split{face_num}"
+
     tasks = ["train", "val", "test"]
     for task in tasks:
-        files = sorted([x for x in glob.glob(f"{data_dir}/*/*clean_2.ply")])
+        files = sorted([x for x in glob.glob(f"{data_dir}/custom/*.obj")])
 
         task_save_dir = osp.join(save_dir, task)
         os.makedirs(osp.join(save_dir, "raw_map", task), exist_ok=True)
         os.makedirs(task_save_dir, exist_ok=True)
+
         files = [
             (
-                read_scannet_ply,
+                read_custom_obj,
                 mesh_file,
                 task_save_dir,
-                mesh_file.split("/")[-2],
+                osp.basename(mesh_file).split(".")[0],
                 voxel_size,
                 face_num,
             )
             for mesh_file in files
         ]
-        multi_process(voxelize_mesh_wrapper, files, processes=processes)
+
+        print("Files:\n", files)
+        for file in files:
+            voxelize_mesh_wrapper(file)
 
 
 if __name__ == "__main__":
     preprocess_voxel()
+    print("Done.")

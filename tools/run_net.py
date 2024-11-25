@@ -16,12 +16,14 @@ def main():
         metavar="FILE",
         help="path to config file",
         type=str,
+        required=True
     )
     parser.add_argument(
         "--task",
         default="train",
         help="train,val",
         type=str,
+        required=True
     )
 
     parser.add_argument(
