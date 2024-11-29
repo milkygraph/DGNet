@@ -9,6 +9,8 @@ The paper is in [Here](https://ieeexplore.ieee.org/abstract/document/10070611/).
 ### GCC
 Make sure you have the gcc and g++ version 12 and it is the default.
 
+### Python version
+Make sure you have python version no later than 3.10. Project is not compatible with python 3.11 and later
 ### Python Environment
 ```
 python3 -m venv .venv
