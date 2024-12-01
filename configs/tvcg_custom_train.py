@@ -1,5 +1,5 @@
 model = dict(
-    type="DGNet",
+    type="Custom",
     encoder_channels=[64, 96,128, 160, 192, 224],
     decoder_channels=[224, 192, 160, 128, 96,64],
     radius = [0.1,0.2,0.4,0.6,0.8],
@@ -14,10 +14,10 @@ model = dict(
 
 dataroot = "datasets/custom_2_split100000"
 batch_size = 2
-feats = ["area","normal","center","color","angle","curvs"]
+feats = ["area","normal","center","angle","curvs","color","length","height"]
 dataset = dict(
     train = dict(
-        type = "Scannet",
+        type = "Custom",
         dataroot = dataroot,
         mode = "train",
         pattern = "*.obj",
@@ -34,7 +34,7 @@ dataset = dict(
         feats = feats,
     ),
     val = dict(
-        type = "Scannet",
+        type = "Custom",
         dataroot = dataroot,
         pattern = "*.obj",
         mode = "val",

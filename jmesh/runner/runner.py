@@ -6,6 +6,7 @@ import os.path as osp
 import os
 
 import jmesh
+import jmesh.data
 from jmesh.config.config import get_cfg,save_cfg
 from jmesh.utils.registry import build_from_cfg,MODELS,SCHEDULERS,DATASETS,HOOKS,OPTIMS
 from jmesh.utils.general import build_file,current_time,search_ckpt,check_file,clean,print_network
@@ -106,7 +107,7 @@ class Runner:
             self.iter+=1
         
         assert len(files) == len(set(files)),f"{len(files)} {len(set(files))}"
-        
+
         if jt.rank == 0:
             data = metric.value()
             data.update(dict(
