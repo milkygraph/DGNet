@@ -106,6 +106,7 @@ def read_scannet_ply(mesh_file, with_mapping=True):
     ]
 
     labels_file = mesh_file.replace(".ply", ".labels.ply")
+    print(labels_file)
     with_labels = False
     if osp.exists(labels_file):
         label_data = PlyData.read(labels_file)

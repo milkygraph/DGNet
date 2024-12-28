@@ -1,5 +1,5 @@
 model = dict(
-    type="Custom",
+    type="DGNet",
     encoder_channels=[64, 96,128, 160, 192, 224],
     decoder_channels=[224, 192, 160, 128, 96,64],
     radius = [0.1,0.2,0.4,0.6,0.8],
