@@ -100,15 +100,15 @@ def crop_mesh(
 def read_scannet_ply(mesh_file, with_mapping=True):
     mesh_data = PlyData.read(mesh_file)
 
-    # Add dummy rgb colors
-    mesh_data["vertex"]["red"] = np.zeros(len(mesh_data["vertex"]))
-    mesh_data["vertex"]["green"] = np.zeros(len(mesh_data["vertex"]))
-    mesh_data["vertex"]["blue"] = np.zeros(len(mesh_data["vertex"]))
 
+    # Get the x, y, z coordinates
     vertex_data = [
-        np.asarray(mesh_data["vertex"][x])
-        for x in ["x", "y", "z", "red", "green", "blue"]
+        np.asarray(mesh_data["vertex"][x]) for x in ["x", "y", "z"]
     ]
+
+    # Assign zero values for red, green, blue channels
+    rgb_data = np.zeros_like(vertex_data[0])
+    vertex_data = vertex_data + [rgb_data]
 
     vertex_labels = np.asarray(mesh_data["vertex"]["label"])
     vertex_data = vertex_data + [vertex_labels]

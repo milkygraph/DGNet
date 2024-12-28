@@ -20,12 +20,14 @@ def get_confusionmatrix(predicted, target):
         target = target.numpy()
 
     num_classes = predicted.shape[-2]
+    print("N Classes", num_classes)
     predicted = predicted.argmax(-2)
+    print("predicted", predicted)
 
     predicted = predicted.reshape(-1)
     target = target.reshape(-1)
 
-    
+    print("target", target)
 
     assert predicted.shape[0] == target.shape[0], \
         'number of targets and predicted outputs do not match'
@@ -64,8 +66,10 @@ def get_iou(conf_matrix,ignore_index=None):
         for K classes it's numpy.ndarray with K elements. The second output,
         is the mean IoU.
     """
+    ignore_index = None
+    print(conf_matrix)
     if ignore_index is not None:
-        conf_matrix[:, ignore_index] = 0
+        conf_matrix[:, ignore_index[0]] = 0
         conf_matrix[ignore_index, :] = 0
     true_positive = np.diag(conf_matrix)
     false_positive = np.sum(conf_matrix, 0) - true_positive
