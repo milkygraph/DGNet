@@ -69,13 +69,10 @@ class Runner:
                 self.save()
 
     def train(self):
-        # self.logger.print_log("Training....")
+        self.logger.print_log("Training....")
         self.model.train()
 
-        if self.cfg.iou_metric:
-            metric = IoU(mode="train",ignore_index=self.cfg.ignore_index)
-        else:
-            metric = Accuracy(mode="train")
+        metric = Accuracy(mode="train")
 
         files = []
         for batch_idx,(feats,targets) in tqdm(
@@ -91,6 +88,7 @@ class Runner:
                 self.scheduler.step(iters=self.iter,epochs=self.epoch,by_epoch=True)
             
             files.extend(feats.get("mesh_files"))
+            print(files)
             if self.iter % 10 == 0:
                 jt.sync_all(True)
                 jt.gc()
@@ -128,7 +126,7 @@ class Runner:
         is_save = True if self.cfg.save_val == True else False
         results = []
         
-        metric = IoU(mode="val",ignore_index=self.cfg.ignore_index)
+        metric = Accuracy(mode="val")
         
         files = []
         for batch_idx,(feats,targets) in tqdm(enumerate(self.val_dataset),desc=f'Val {self.epoch}',total=len(self.val_dataset)):

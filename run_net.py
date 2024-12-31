@@ -14,7 +14,7 @@ def main():
         "--config-file",
         default="",
         metavar="FILE",
-        help=" to config file",
+        help="path to config file",
         type=str,
         required=True
     )

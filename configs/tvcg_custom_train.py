@@ -1,5 +1,6 @@
+
 model = dict(
-    type="Custom",
+    type="DGNet",
     encoder_channels=[64, 96,128, 160, 192, 224],
     decoder_channels=[224, 192, 160, 128, 96,64],
     radius = [0.1,0.2,0.4,0.6,0.8],
@@ -9,24 +10,24 @@ model = dict(
     temp_sample = 1000,
     use_pool = True,
     in_channels=16,
-    num_classes=5 # 5 classes: left_arm, right_arm, legs, head, torso
+    num_classes=7
 )
 
-dataroot = "datasets/custom_2_split100000"
+dataroot = "datasets/scannet/scannet_voxel_2_split1000"
 batch_size = 2
-feats = ["area","normal","center","angle","curvs","color","length","height"]
+feats = ["area","normal","center","color","angle","curvs"]
 dataset = dict(
     train = dict(
-        type = "Custom",
+        type = "Scannet",
         dataroot = dataroot,
         mode = "train",
-        pattern = "*.obj",
+        pattern = "scene*.obj",
         transforms = [
-            dict(type="Distort"),
+            dict(type="Distort"), 
             dict(type="Rotation3"),
             dict(type="Normalize3")
         ],
-        batch_size = batch_size,
+        batch_size = batch_size, 
         shuffle = True,
         color_aug = False,
         num_workers = 4,
@@ -34,9 +35,9 @@ dataset = dict(
         feats = feats,
     ),
     val = dict(
-        type = "Custom",
+        type = "Scannet",
         dataroot = dataroot,
-        pattern = "*.obj",
+        pattern = "scene*.obj",
         mode = "val",
         transforms = [
             dict(type="Rotation3"),
@@ -71,7 +72,7 @@ log_interval = 1
 eval_interval = 5
 max_epoch = 200
 
-iou_metric = True
+iou_metric = False
 ignore_index = 0
 processor = "segmentation"
 

@@ -7,7 +7,6 @@ from plyfile import PlyData, PlyElement
 from tqdm import tqdm
 import trimesh
 import jittor as jt
-from jmesh.config.constant import SCANNET_CLASS_REMAP
 from jmesh.utils.general import multi_process
 from jmesh.utils.data_utils import vertex2face_labels, vertex2vertex_map, voxelize_mesh
 from jmesh.layers.face_pool import build_mesh_level
@@ -100,23 +99,20 @@ def crop_mesh(
 
 def read_scannet_ply(mesh_file, with_mapping=True):
     mesh_data = PlyData.read(mesh_file)
+
+
+    # Get the x, y, z coordinates
     vertex_data = [
-        np.asarray(mesh_data["vertex"][x])
-        for x in ["x", "y", "z", "red", "green", "blue"]
+        np.asarray(mesh_data["vertex"][x]) for x in ["x", "y", "z"]
     ]
 
-    labels_file = mesh_file.replace(".ply", ".labels.ply")
-    print(labels_file)
-    with_labels = False
-    if osp.exists(labels_file):
-        label_data = PlyData.read(labels_file)
-        vertex_labels = np.asarray(label_data["vertex"]["label"])
-        if with_mapping:
-            # FIX: THREE MESHES HAVE CORRUPTED LABEL IDS,from dcm-net
-            vertex_labels[vertex_labels > 40] = 0
-            vertex_labels = SCANNET_CLASS_REMAP[vertex_labels]
-        vertex_data = vertex_data + [vertex_labels]
-        with_labels = True
+    # Assign zero values for red, green, blue channels
+    rgb_data = np.zeros_like(vertex_data[0])
+    vertex_data = vertex_data + [rgb_data]
+
+    vertex_labels = np.asarray(mesh_data["vertex"]["label"])
+    vertex_data = vertex_data + [vertex_labels]
+    with_labels = True
 
     vertex_data = np.stack(vertex_data, axis=1)
 
@@ -155,9 +151,9 @@ def voxelize_mesh_wrapper(args):
 def preprocess_voxel():
     processes = 1
     voxel_size = 2
-    face_num = 100000
+    face_num = 1000
 
-    data_dir = "scans_test/"
+    data_dir = "patient_scans/"
 
     assert os.path.exists(data_dir), "The data dir must exist."
     save_dir = f"datasets/scannet/scannet_voxel_{voxel_size}_split{face_num}"
@@ -165,7 +161,7 @@ def preprocess_voxel():
     #     shutil.rmtree(save_dir)
     tasks = ["train", "val", "test"]
     for task in tasks:
-        files = sorted([x for x in glob.glob(f"{data_dir}/*/*clean_2.ply")])
+        files = sorted([x for x in glob.glob(f"{data_dir}/*.ply")])
 
         task_save_dir = osp.join(save_dir, task)
         os.makedirs(osp.join(save_dir, "raw_map", task), exist_ok=True)
