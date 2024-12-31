@@ -1,6 +1,6 @@
-import jittor as jt 
-import numpy as np 
-import trimesh 
+import jittor as jt
+import numpy as np
+import trimesh
 
 def map_face(adj,strict=True):
     # 2 represent pooled, 1 represent reserved, 0 represent unlabeled;
@@ -51,7 +51,7 @@ def map_face(adj,strict=True):
     q = jt.zeros((F,),dtype="int32")
     color = jt.code((F,),adj.dtype,inputs=[adj,q],cpu_header=head,cpu_src=src)
     assert (color == 0).sum()==0
-    return color  
+    return color
 
 def update_adj(pool_mask,adj):
     '''
@@ -102,7 +102,7 @@ def face_pool_single(adj):
     inputs:
         adj:[F,3],
     '''
-    color = map_face(adj,strict=True)
+    color = map_face(adj,strict=False)
     pool_mask = (color ==1).int()
     new_adj = update_adj(pool_mask,adj)
     new_adj = new_adj[color ==1,:]
@@ -125,7 +125,7 @@ def build_face_adjacency(faces):
         i1 = index[i]
         i2 = index[i+1]
         if hash_edge[i1]==hash_edge[i2]:
-            face_adjacency[i1//3,i1%3]=i2//3 
+            face_adjacency[i1//3,i1%3]=i2//3
             face_adjacency[i2//3,i2%3]=i1//3
     return face_adjacency
 
