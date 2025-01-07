@@ -151,7 +151,7 @@ def voxelize_mesh_wrapper(args):
 def preprocess_voxel():
     processes = 1
     voxel_size = 2
-    face_num = 1000
+    face_num = 100000
 
     data_dir = "patient_scans/"
 
@@ -171,12 +171,13 @@ def preprocess_voxel():
                 read_scannet_ply,
                 mesh_file,
                 task_save_dir,
-                mesh_file.split("/")[-2],
+                mesh_file.split("/")[-1].split(".")[-2],
                 voxel_size,
                 face_num,
             )
             for mesh_file in files
         ]
+
         multi_process(voxelize_mesh_wrapper, files, processes=processes)
 
 
