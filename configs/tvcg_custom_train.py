@@ -13,15 +13,15 @@ model = dict(
     num_classes=7
 )
 
-dataroot = "datasets/scannet/scannet_voxel_2_split1000"
-batch_size = 2
+dataroot = "datasets/scannet/scannet_voxel_2_split100000"
+batch_size = 10
 feats = ["area","normal","center","color","angle","curvs"]
 dataset = dict(
     train = dict(
         type = "Scannet",
         dataroot = dataroot,
         mode = "train",
-        pattern = "scene*.obj",
+        pattern = "*.obj",
         transforms = [
             dict(type="Distort"), 
             dict(type="Rotation3"),
@@ -37,7 +37,7 @@ dataset = dict(
     val = dict(
         type = "Scannet",
         dataroot = dataroot,
-        pattern = "scene*.obj",
+        pattern = "*.obj",
         mode = "val",
         transforms = [
             dict(type="Rotation3"),
