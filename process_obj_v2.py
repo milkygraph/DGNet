@@ -151,7 +151,7 @@ def voxelize_mesh_wrapper(args):
 def preprocess_voxel():
     processes = 1
     voxel_size = 2
-    face_num = 100000
+    face_num = 1000000
 
     data_dir = "patient_scans/"
 

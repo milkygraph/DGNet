@@ -9,15 +9,15 @@ model = dict(
     temp_sample = 1000,
     use_pool = True,
     in_channels=16,
-    num_classes=5 # 5 classes: left_arm, right_arm, legs, head, torso
+    num_classes=7 # 5 classes: left_arm, right_arm, legs, head, torso
 )
 
-dataroot = "datasets/custom_2_split100000"
+dataroot = "datasets/scannet/scannet_voxel_2_split100000"
 batch_size = 8
 feats = ["area","normal","center","color","angle","curvs"]
 dataset = dict(
     train = dict(
-        type = "Custom",
+        type = "Scannet",
         dataroot = dataroot,
         mode = "train",
         pattern = "*.obj",
@@ -34,7 +34,7 @@ dataset = dict(
         feats = feats,
     ),
     val = dict(
-        type = "Custom",
+        type = "Scannet",
         dataroot = dataroot,
         pattern = "*.obj",
         mode = "val",
@@ -76,5 +76,5 @@ ignore_index = 0
 processor = "segmentation"
 
 val_iters = 16
-resume_path = "work_dirs/custom/checkpoints/ckpt_200.pkl"
+resume_path = "work_dirs/tvcg_custom_train/checkpoints/ckpt_200.pkl"
 save_val = True

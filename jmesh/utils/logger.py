@@ -3,7 +3,6 @@ from .registry import HOOKS,build_from_cfg
 import time 
 import os
 import logging
-from tensorboardX import SummaryWriter
 from jmesh.config import get_cfg
 
 @HOOKS.register_module()
@@ -23,7 +22,6 @@ class TensorboardLogger:
     def __init__(self,work_dir):
         self.cfg = get_cfg()
         tensorboard_dir = os.path.join(work_dir,"tensorboard")
-        self.writer = SummaryWriter(tensorboard_dir,flush_secs=10)
 
     def log(self,data):
         step = data["iter"]
@@ -32,7 +30,6 @@ class TensorboardLogger:
                 continue
             if isinstance(d,str):
                 continue
-            self.writer.add_scalar(k,d,global_step=step)
 
 @HOOKS.register_module()
 class RunLogger:

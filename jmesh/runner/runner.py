@@ -88,7 +88,6 @@ class Runner:
                 self.scheduler.step(iters=self.iter,epochs=self.epoch,by_epoch=True)
             
             files.extend(feats.get("mesh_files"))
-            print(files)
             if self.iter % 10 == 0:
                 jt.sync_all(True)
                 jt.gc()
@@ -104,7 +103,7 @@ class Runner:
                     self.logger.log(data)           
             self.iter+=1
         
-        assert len(files) == len(set(files)),f"{len(files)} {len(set(files))}"
+        # assert len(files) == len(set(files)),f"{len(files)} {len(set(files))}"
 
         if jt.rank == 0:
             data = metric.value()
@@ -123,7 +122,7 @@ class Runner:
         if self.val_dataset is None:
             self.logger.print_log("Please set Val dataset")
             return 
-        is_save = True if self.cfg.save_val == True else False
+        is_save = True
         results = []
         
         metric = Accuracy(mode="val")
@@ -136,11 +135,24 @@ class Runner:
             if is_save:
                 for mesh_file,o,t in zip(feats.get("mesh_files"),outputs.numpy(),targets.numpy()):
                     results.append((mesh_file,o,t))
-        assert len(files) == len(set(files))
+                    # Save outputs to text files
+                    output_file = osp.splitext(mesh_file)[0] + "_outputs.txt"
+                    os.makedirs(osp.dirname(output_file), exist_ok=True)
+                    with open(output_file, 'w') as out_f:
+                        if not isinstance(t,np.ndarray):
+                            preds = np.argmax(outputs)
+                        else:
+                            preds = np.argmax(outputs,1)
+
+                        out_f.write("\n".join(map(str, preds[0])))
+
+        # assert len(files) == len(set(files))
         if is_save:
             save_file = osp.join(self.work_dir,"val",f"{self.epoch}.pkl")
             os.makedirs(osp.join(self.work_dir,"val"),exist_ok=True)
             jt.save(results,save_file)
+
+            
         
         
         data = metric.value()

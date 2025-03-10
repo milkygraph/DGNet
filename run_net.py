@@ -3,6 +3,7 @@ import os
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
 
+import numpy as np
 import argparse
 import jittor as jt
 from jmesh.runner import Runner 
