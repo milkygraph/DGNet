@@ -122,3 +122,7 @@ class MeshTensor:
 
     def __mul__(self, mesh):
         return self.updated(feats=self.feats * mesh.feats)
+
+    def convert_to_tensor(self):
+        torch_feats = torch.tensor(self.feats)
+        return MeshTensor(torch_feats, self.level, self.levels, **self._property)

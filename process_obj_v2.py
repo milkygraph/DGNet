@@ -100,22 +100,23 @@ def crop_mesh(
 def read_scannet_ply(mesh_file, with_mapping=True):
     mesh_data = PlyData.read(mesh_file)
 
-
     # Get the x, y, z coordinates
-    vertex_data = [
-        np.asarray(mesh_data["vertex"][x]) for x in ["x", "y", "z"]
-    ]
+    vertex_data = [np.asarray(mesh_data["vertex"][x]) for x in ["x", "y", "z"]]
 
     # Assign zero values for red, green, blue channels
     rgb_data = np.zeros_like(vertex_data[0])
     vertex_data = vertex_data + [rgb_data]
 
-    vertex_labels = np.asarray(mesh_data["vertex"]["label"])
-    vertex_data = vertex_data + [vertex_labels]
     with_labels = True
+    try:
+        vertex_labels = np.asarray(mesh_data["vertex"]["label"])
+        vertex_data = vertex_data + [vertex_labels]
+    except Exception:
+        # Create a default label array with zeros for all vertices
+        vertex_labels = np.zeros_like(vertex_data[0])
+        vertex_data = vertex_data + [vertex_labels]
 
     vertex_data = np.stack(vertex_data, axis=1)
-
     faces = np.stack([face[0] for face in mesh_data["face"]], axis=0)
     return vertex_data, faces, with_labels
 
@@ -151,12 +152,12 @@ def voxelize_mesh_wrapper(args):
 def preprocess_voxel():
     processes = 1
     voxel_size = 2
-    face_num = 100000
+    face_num = 1000000
 
     data_dir = "patient_scans/"
 
     assert os.path.exists(data_dir), "The data dir must exist."
-    save_dir = f"datasets/scannet/scannet_voxel_{voxel_size}_split{face_num}"
+    save_dir = f"datasets/scannet_jt/scannet_voxel_{voxel_size}_split{face_num}"
     # if osp.exists(save_dir):
     #     shutil.rmtree(save_dir)
     tasks = ["train", "val", "test"]

@@ -1,7 +1,6 @@
 from jmesh.utils.registry import OPTIMS
 
 from jittor import optim
-import jittor as jt
 
 
 class Optimizer(object):

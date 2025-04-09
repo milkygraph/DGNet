@@ -2,11 +2,14 @@ import jittor as jt
 import numpy as np
 import trimesh
 
-def map_face(adj,strict=True):
+
+def map_face(adj, strict=True):
     # 2 represent pooled, 1 represent reserved, 0 represent unlabeled;
-    head=f'''
+    head = (
+        f"""
     #define STRICT {1 if strict else 0}
-    '''+r'''
+    """
+        + r"""
     int check(int now,int last,int A,const int* adj,const int* color){
         if (!STRICT || color[last]==2)
             return !(color[last]-1)+1;
@@ -19,8 +22,9 @@ def map_face(adj,strict=True):
         }
         return 2;
     }
-    '''
-    src =r'''
+    """
+    )
+    src = r"""
     const int* adj = in0_p;
     int* q = in1_p;
     int* color = out0_p;
@@ -46,21 +50,25 @@ def map_face(adj,strict=True):
             }
         }
     }
-    '''
-    F,_ = adj.shape
-    q = jt.zeros((F,),dtype="int32")
-    color = jt.code((F,),adj.dtype,inputs=[adj,q],cpu_header=head,cpu_src=src)
-    assert (color == 0).sum()==0
+    """
+    F, _ = adj.shape
+    q = jt.zeros((F,), dtype="int32")
+    color = jt.code((F,), adj.dtype, inputs=[adj, q], cpu_header=head, cpu_src=src)
+    assert (color == 0).sum() == 0
     return color
 
-def update_adj(pool_mask,adj):
-    '''
+
+def update_adj(pool_mask, adj):
+    """
     pool_mask: 1 -> reserve 0-> pooled
-    '''
+    """
     new_adj = -jt.ones_like(adj)
-    new_adj, = jt.code(outputs=[new_adj,],
-                       inputs=[pool_mask,adj],
-                       cpu_src=r'''
+    (new_adj,) = jt.code(
+        outputs=[
+            new_adj,
+        ],
+        inputs=[pool_mask, adj],
+        cpu_src=r"""
     const int* pool_mask = in0_p;
     const int* in_adj = in1_p;
     int* out_adj = out0_p;
@@ -94,49 +102,51 @@ def update_adj(pool_mask,adj):
             }
         }
     }
-    ''')
+    """,
+    )
     return new_adj
 
+
 def face_pool_single(adj):
-    '''
+    """
     inputs:
         adj:[F,3],
-    '''
-    color = map_face(adj,strict=False)
-    pool_mask = (color ==1).int()
-    new_adj = update_adj(pool_mask,adj)
-    new_adj = new_adj[color ==1,:]
-    remap = jt.array(pool_mask.numpy().cumsum())*pool_mask-1
+    """
+    color = map_face(adj, strict=False)
+    pool_mask = (color == 1).int()
+    new_adj = update_adj(pool_mask, adj)
+    new_adj = new_adj[color == 1, :]
+    remap = jt.array(pool_mask.numpy().cumsum()) * pool_mask - 1
     mask = new_adj == -1
     new_adj = remap[new_adj]
-    new_adj[mask]=-1
-    assert mask.sum() == (new_adj==-1).sum()
+    new_adj[mask] = -1
+    assert mask.sum() == (new_adj == -1).sum()
 
-    return pool_mask,new_adj
+    return pool_mask, new_adj
+
 
 def build_face_adjacency(faces):
-    edges = faces[:,[0,1,1,2,2,0]].reshape(-1,2)
-    edges = np.sort(edges,axis=1)
-    m = edges.max().item()+10
-    hash_edge = m*edges[:,0]+edges[:,1]
+    edges = faces[:, [0, 1, 1, 2, 2, 0]].reshape(-1, 2)
+    edges = np.sort(edges, axis=1)
+    m = edges.max().item() + 10
+    hash_edge = m * edges[:, 0] + edges[:, 1]
     index = np.argsort(hash_edge)
     face_adjacency = -np.ones_like(faces)
-    for i in range(len(index)-1):
+    for i in range(len(index) - 1):
         i1 = index[i]
-        i2 = index[i+1]
-        if hash_edge[i1]==hash_edge[i2]:
-            face_adjacency[i1//3,i1%3]=i2//3
-            face_adjacency[i2//3,i2%3]=i1//3
+        i2 = index[i + 1]
+        if hash_edge[i1] == hash_edge[i2]:
+            face_adjacency[i1 // 3, i1 % 3] = i2 // 3
+            face_adjacency[i2 // 3, i2 % 3] = i1 // 3
     return face_adjacency
 
-def build_mesh_level(faces,level=9):
+
+def build_mesh_level(faces, level=9):
     face_adj = build_face_adjacency(faces)
     face_adj = jt.array(face_adj)
     levels = []
     for i in range(level):
-        pool_mask,new_adj = face_pool_single(face_adj)
-        levels.append([pool_mask.numpy(),face_adj.numpy()])
+        pool_mask, new_adj = face_pool_single(face_adj)
+        levels.append([pool_mask.numpy(), face_adj.numpy()])
         face_adj = new_adj
     return levels
-
-
